@@ -1,0 +1,20 @@
+{
+  "files.associations": {
+    "__bit_reference": "c",
+    "bitset": "c",
+    "deque": "c",
+    "limits": "c",
+    "ratio": "c",
+    "tuple": "c",
+    "vector": "c",
+    "__hash_table": "cpp",
+    "array": "cpp",
+    "type_traits": "cpp",
+    "variant": "cpp",
+    "__split_buffer": "cpp",
+    "iterator": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "unordered_map": "cpp"
+  }
+}
