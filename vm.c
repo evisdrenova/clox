@@ -7,10 +7,23 @@ VM vm;
 
 void initVM()
 {
+    resetStack();
 }
 
 void freeVM()
 {
+}
+
+void push(Value value)
+{
+    *vm.stackTop = value;
+    vm.stackTop++;
+}
+
+Value pop()
+{
+    vm.stackTop--;
+    return *vm.stackTop;
 }
 
 // run the VM
@@ -25,6 +38,14 @@ static InterpretResult run()
     {
         // checks if the DTE flag is set and if code, it runs the function
 #ifdef DEBUG_TRACE_EXECUTION
+        printf("      ");
+        for (Value *slot = vm.stack; slot < vm.stackTop; slot++)
+        {
+            printf("[");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
         disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
         uint8_t instruction;
@@ -33,12 +54,13 @@ static InterpretResult run()
         case OP_CONSTANT:
         {
             Value constant = READ_CONSTANT();
-            printValue(constant);
-            printf("\n");
+            push(constant);
             break;
         }
         case OP_RETURN:
         {
+            printValue(pop());
+            printf("\n");
             return INTERPRET_OK;
         }
         }
@@ -54,4 +76,9 @@ InterpretResult interpret(Chunk *chunk)
     // initialize the ip by pointing it to the first chunk about to be executed since it hasn't been executed at first
     vm.ip = vm.chunk->code;
     return run();
+}
+
+static void resetStack()
+{
+    vm.stackTop = vm.stack;
 }
