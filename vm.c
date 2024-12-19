@@ -5,6 +5,12 @@
 
 VM vm;
 
+static void resetStack()
+{
+    // stack is empty at this point, so this effectively resets the stack
+    vm.stackTop = vm.stack;
+}
+
 void initVM()
 {
     resetStack();
@@ -16,13 +22,19 @@ void freeVM()
 
 void push(Value value)
 {
+    // stack works left to right
+    // store the value at the stackTop which is the value just past the most recently used index in the array
     *vm.stackTop = value;
+    // then increment the stackTop pointer to the next empty space to the right
     vm.stackTop++;
 }
 
 Value pop()
 {
+    // decerement the stackTop pointer to back one space to the left
     vm.stackTop--;
+    // return the value of the updated stackTop pointer
+    // we don't need to actually remove the value from the array, simply moving the pointer handles that
     return *vm.stackTop;
 }
 
@@ -33,6 +45,14 @@ static InterpretResult run()
 #define READ_BYTE() (*vm.ip++)
 // defines a macro that reads in constants from the values array
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
+#define BINARY_OP(op)     \
+    do                    \
+    {                     \
+        double b = pop(); \
+        double a = pop(); \
+        push(a op b);     \
+    } while (false)
 
     for (;;) // creates an infinite loop that will continue to run until terminated
     {
@@ -57,6 +77,32 @@ static InterpretResult run()
             push(constant);
             break;
         }
+        case OP_NEGATE:
+        {
+            // pops the value, then negates it with the '-' then pushes it back on
+            push(-pop());
+            break;
+        }
+        case OP_ADD:
+        {
+            BINARY_OP(+);
+            break;
+        }
+        case OP_SUBTRACT:
+        {
+            BINARY_OP(-);
+            break;
+        }
+        case OP_MULTIPLY:
+        {
+            BINARY_OP(*);
+            break;
+        }
+        case OP_DIVIDE:
+        {
+            BINARY_OP(/);
+            break;
+        }
         case OP_RETURN:
         {
             printValue(pop());
@@ -68,6 +114,7 @@ static InterpretResult run()
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 InterpretResult interpret(Chunk *chunk)
@@ -76,9 +123,4 @@ InterpretResult interpret(Chunk *chunk)
     // initialize the ip by pointing it to the first chunk about to be executed since it hasn't been executed at first
     vm.ip = vm.chunk->code;
     return run();
-}
-
-static void resetStack()
-{
-    vm.stackTop = vm.stack;
 }
